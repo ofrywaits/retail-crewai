@@ -1,0 +1,12 @@
+# לא מעלים לגיטהאב
+.env
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+venv/
+.venv/
+models/*.pkl
+models/*.joblib
+data/raw/
+data/processed/
