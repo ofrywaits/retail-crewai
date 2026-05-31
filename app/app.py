@@ -220,6 +220,54 @@ code, pre {
 
 /* Caption */
 .stCaption, small { color: rgba(255,255,255,0.45) !important; }
+
+/* ═══════════════════════════════════════════
+   RTL — עברית מימין לשמאל
+═══════════════════════════════════════════ */
+.stMarkdown,
+[data-testid="stMarkdownContainer"],
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stMarkdownContainer"] h1,
+[data-testid="stMarkdownContainer"] h2,
+[data-testid="stMarkdownContainer"] h3,
+[data-testid="stMarkdownContainer"] h4,
+[data-testid="stMarkdownContainer"] li,
+[data-testid="stMarkdownContainer"] ul,
+[data-testid="stMarkdownContainer"] ol,
+.stCaption,
+.element-container p {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+/* כותרות עמוד */
+h1, h2, h3, h4 {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* סיידבר — RTL */
+section[data-testid="stSidebar"] .stMarkdown,
+section[data-testid="stSidebar"] [data-testid="stMarkdownContainer"],
+section[data-testid="stSidebar"] label,
+section[data-testid="stSidebar"] p {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* שמור על קוד LTR */
+code, pre, .stCode {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* metric labels — center */
+[data-testid="stMetricLabel"],
+[data-testid="stMetricValue"] {
+    text-align: center !important;
+    direction: rtl !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
