@@ -48,12 +48,16 @@ evaluation_task = Task(
 
 model_card_task = Task(
     description=(
-        "Based on the evaluation results, write 2-3 sentences in English about "
-        "the business value of this model: how retailers can use it to improve profit margins. "
-        "Return ONLY these 2-3 sentences as your Final Answer — do NOT call any tool."
+        "Based on the evaluation results, write a model card in Hebrew with exactly these 5 sections:\n"
+        "1. מטרת המודל — one sentence describing the model's goal.\n"
+        "2. סיכום נתוני אימון — brief summary: dataset size, features, time period.\n"
+        "3. מדדים — Accuracy, F1, AUC for both models (one line each).\n"
+        "4. מגבלות — 3 bullet points: data scope, time period, missing external factors.\n"
+        "5. שיקולים אתיים — 3 bullet points: geographic bias, transparency, fair use.\n"
+        "Return ONLY this structured text as your Final Answer — do NOT call any tool."
     ),
     expected_output=(
-        "2-3 English sentences describing the model's business value for retail profit optimization."
+        "A model card in Hebrew with 5 sections: מטרת המודל, סיכום נתוני אימון, מדדים, מגבלות, שיקולים אתיים."
     ),
     agent=model_card_agent,
     context=[evaluation_task],
