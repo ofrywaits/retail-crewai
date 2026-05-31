@@ -14,6 +14,8 @@ import joblib
 import numpy as np
 import subprocess
 import sys
+import datetime
+import os
 from pathlib import Path
 from bidi.algorithm import get_display
 
@@ -94,13 +96,28 @@ st.sidebar.markdown("---")
 
 page = st.sidebar.radio(
     "בחר עמוד:",
-    ["🏠 דשבורד ראשי", "📊 ניתוח נתונים", "💡 תובנות עסקיות", "🤖 מודל ML", "🔮 ניבוי", "📤 העלה נתונים"],
+    ["🏠 דשבורד ראשי", "📊 ניתוח נתונים", "💡 תובנות עסקיות",
+     "🤖 מודל ML", "🔮 ניבוי", "📤 העלה נתונים", "📋 מוניטורינג"],
 )
 
 st.sidebar.markdown("---")
 st.sidebar.caption("מונע על ידי CrewAI + Groq LLM")
 st.sidebar.caption("מאגר: Israeli Retail 2022–2024")
 st.sidebar.caption("~9,900 עסקאות | 19 עמודות")
+
+# ── פידבק בצד (שלב 18: Iteration) ───────────────────────────────────────────
+st.sidebar.markdown("---")
+with st.sidebar.expander("💬 פידבק"):
+    feedback = st.text_area("כתוב פה הערות / רעיונות לשיפור:", key="feedback_text", height=80)
+    if st.button("שלח פידבק", key="send_feedback"):
+        if feedback.strip():
+            feedback_path = ROOT / "logs/feedback.txt"
+            feedback_path.parent.mkdir(exist_ok=True)
+            with open(feedback_path, "a", encoding="utf-8") as f:
+                f.write(f"\n[{datetime.datetime.now():%Y-%m-%d %H:%M}] {feedback}\n")
+            st.success("תודה! הפידבק נשמר ✅")
+        else:
+            st.warning("נא לכתוב משהו לפני השליחה")
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -111,7 +128,15 @@ if page == "🏠 דשבורד ראשי":
     st.markdown("**ניתוח מכירות קמעונאיות ישראליות 2022–2024 | מונע על ידי CrewAI**")
     st.markdown("---")
 
-    df = load_data()
+    try:
+        df = load_data()
+    except FileNotFoundError:
+        st.error("❌ קובץ הנתונים לא נמצא. הרץ תחילה: `python3 run_flow.py`")
+        st.info("לחלופין, עבור לעמוד **📤 העלה נתונים** כדי להעלות CSV משלך.")
+        st.stop()
+    except Exception as e:
+        st.error(f"שגיאה בטעינת נתונים: {e}")
+        st.stop()
 
     months_heb = {1:"ינואר",2:"פברואר",3:"מרץ",4:"אפריל",5:"מאי",6:"יוני",
                   7:"יולי",8:"אוגוסט",9:"ספטמבר",10:"אוקטובר",11:"נובמבר",12:"דצמבר"}
@@ -171,7 +196,14 @@ elif page == "📊 ניתוח נתונים":
     st.markdown("**6 גרפים של הדאטאסט — ניתן לסנן לפי קטגוריה ושנה**")
     st.markdown("---")
 
-    df = load_data()
+    try:
+        df = load_data()
+    except FileNotFoundError:
+        st.error("❌ נתונים לא נמצאו. הרץ `python3 run_flow.py` או העלה CSV.")
+        st.stop()
+    except Exception as e:
+        st.error(f"שגיאה בטעינת נתונים: {e}")
+        st.stop()
 
     with st.expander("🔍 סינון נתונים", expanded=False):
         fc1, fc2 = st.columns(2)
@@ -524,3 +556,118 @@ elif page == "📤 העלה נתונים":
         except Exception as e:
             st.error(f"שגיאה בקריאת הקובץ: {e}")
             st.info("וודא שהקובץ הוא CSV תקין עם encoding UTF-8")
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# עמוד 7: מוניטורינג (שלב 17)
+# ════════════════════════════════════════════════════════════════════════════
+elif page == "📋 מוניטורינג":
+    st.title("📋 מוניטורינג ולוגים")
+    st.markdown("**סטטוס מערכת, לוגים, וביצועים — שלב 17 מתוך 18**")
+    st.markdown("---")
+
+    # ── סטטוס קבצים ──────────────────────────────────────────────────────────
+    st.subheader("🟢 סטטוס מערכת")
+    files_to_check = {
+        "📄 clean_data.csv":       ROOT / "data/processed/clean_data.csv",
+        "🤖 model.pkl":            ROOT / "models/model.pkl",
+        "📊 model_meta.json":      ROOT / "models/model_meta.json",
+        "🔑 encoders.json":        ROOT / "models/encoders.json",
+        "💡 insights.md":          ROOT / "data/processed/insights.md",
+        "📝 evaluation_report.md": ROOT / "data/processed/evaluation_report.md",
+        "📋 model_card.md":        ROOT / "data/processed/model_card.md",
+    }
+
+    cols = st.columns(4)
+    for i, (label, path) in enumerate(files_to_check.items()):
+        col = cols[i % 4]
+        if path.exists():
+            size_kb = path.stat().st_size / 1024
+            mtime   = datetime.datetime.fromtimestamp(path.stat().st_mtime)
+            col.success(f"✅ {label}")
+            col.caption(f"{size_kb:.1f} KB | {mtime:%d/%m %H:%M}")
+        else:
+            col.error(f"❌ {label}")
+            col.caption("לא נמצא")
+
+    st.markdown("---")
+
+    # ── הרצה אחרונה ──────────────────────────────────────────────────────────
+    st.subheader("⏱️ הרצה אחרונה")
+    logs_dir = ROOT / "logs"
+    summary_files = sorted(logs_dir.glob("summary_*.json"), reverse=True) if logs_dir.exists() else []
+
+    if summary_files:
+        latest = summary_files[0]
+        try:
+            with open(latest, encoding="utf-8") as f:
+                summary = json.load(f)
+            sc1, sc2, sc3, sc4 = st.columns(4)
+            sc1.metric("🕒 Run ID",   summary.get("run_id", "—"))
+            sc2.metric("✅ סטטוס",    summary.get("status", "—"))
+            sc3.metric("⏱️ זמן",     f"{summary.get('duration_sec', 0):.0f}s")
+            sc4.metric("🤖 מודל",    summary.get("best_model", "—"))
+
+            with st.expander("📄 סיכום מלא"):
+                st.json(summary)
+        except Exception as e:
+            st.warning(f"לא ניתן לקרוא summary: {e}")
+    else:
+        st.info("אין נתוני הרצה עדיין — הרץ run_flow.py תחילה")
+
+    st.markdown("---")
+
+    # ── ביצועי מודל ──────────────────────────────────────────────────────────
+    st.subheader("📈 ביצועי מודל אחרונים")
+    try:
+        meta = load_meta()
+        pc1, pc2, pc3 = st.columns(3)
+        rf = meta["random_forest"]
+        pc1.metric("🌲 RF Accuracy", f"{rf['accuracy']:.4f}", delta=f"{rf['accuracy']-0.75:.2f} vs baseline")
+        pc2.metric("🌲 RF F1 Score", f"{rf['f1']:.4f}")
+        pc3.metric("🌲 RF AUC",      f"{rf['auc']:.4f}")
+
+        fig, ax = plt.subplots(figsize=(8, 3))
+        metrics_vals = [rf["accuracy"], rf["f1"], rf["auc"]]
+        metrics_labels = ["Accuracy", "F1 Score", "AUC"]
+        bars = ax.bar(metrics_labels, metrics_vals,
+                      color=["#2196F3", "#4CAF50", "#FF9800"], width=0.4)
+        ax.set_ylim(0, 1.1)
+        for bar, val in zip(bars, metrics_vals):
+            ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
+                    f"{val:.3f}", ha="center", fontsize=11, fontweight="bold")
+        ax.axhline(0.7, color="red", linestyle="--", alpha=0.5, label="סף מינימלי (70%)")
+        ax.legend(fontsize=9)
+        ax.spines[["top", "right"]].set_visible(False)
+        st.pyplot(fig)
+        plt.close()
+    except FileNotFoundError:
+        st.warning("⚠️ קובץ model_meta.json לא נמצא")
+
+    st.markdown("---")
+
+    # ── לוגים ────────────────────────────────────────────────────────────────
+    st.subheader("📜 לוגים אחרונים")
+    log_file = ROOT / "logs/run.log"
+    if log_file.exists():
+        with open(log_file, encoding="utf-8", errors="replace") as f:
+            lines = f.readlines()
+        last_lines = lines[-60:] if len(lines) > 60 else lines
+
+        log_text = "".join(last_lines)
+        st.code(log_text, language=None)
+        st.caption(f"מציג {len(last_lines)} שורות אחרונות מתוך {len(lines)} | {log_file}")
+    else:
+        st.info("קובץ run.log לא נמצא — יווצר בהרצה הבאה")
+
+    # ── פידבק שהתקבל ─────────────────────────────────────────────────────────
+    feedback_file = ROOT / "logs/feedback.txt"
+    if feedback_file.exists():
+        st.markdown("---")
+        st.subheader("💬 פידבק שהתקבל")
+        with open(feedback_file, encoding="utf-8") as f:
+            fb_content = f.read().strip()
+        if fb_content:
+            st.text_area("פידבק מהמשתמשים:", value=fb_content, height=120, disabled=True)
+        else:
+            st.info("אין פידבק עדיין")
