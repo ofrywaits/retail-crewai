@@ -53,7 +53,7 @@ REQUIRED_COLS = [
 
 COLORS = ["#6366f1", "#8b5cf6", "#06b6d4", "#10b981", "#f59e0b", "#ef4444"]
 
-sns.set_theme(style="dark_background")
+sns.set_theme(style="dark")
 matplotlib.rcParams.update({
     "text.color": "#e2e8f0",
     "axes.labelcolor": "#94a3b8",
