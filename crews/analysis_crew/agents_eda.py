@@ -8,7 +8,6 @@ import os
 from crews.analysis_crew.tools_eda import (
     generate_eda_report,
     get_data_statistics,
-    generate_insights_md,
 )
 
 load_dotenv()
@@ -53,7 +52,7 @@ insights_agent = Agent(
         "Shufersal and Rami Levy. You understand Israeli consumer behavior, holiday "
         "effects, and regional differences. You write insights that drive real decisions."
     ),
-    tools=[get_data_statistics, generate_insights_md],
+    tools=[get_data_statistics],
     llm=llm,
     verbose=True,
 )

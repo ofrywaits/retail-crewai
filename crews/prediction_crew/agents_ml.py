@@ -67,14 +67,14 @@ model_evaluator = Agent(
 model_card_agent = Agent(
     role="Model Documentation Specialist",
     goal=(
-        "Write a clear model_card.md that explains what the model does, its performance, "
-        "its limitations, and its intended use."
+        "Write 2-3 sentences about the business value of the trained model: "
+        "how retailers can use it to improve profit margins."
     ),
     backstory=(
         "You believe AI models must be transparent. You write model cards that any "
         "stakeholder — technical or not — can understand."
     ),
-    tools=[create_model_card],
+    tools=[],
     llm=llm,
     verbose=True,
 )

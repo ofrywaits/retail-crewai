@@ -1,0 +1,23 @@
+{
+  "trained_at": "2026-05-31 17:27",
+  "train_size": 7920,
+  "test_size": 1980,
+  "best_model": "Random Forest",
+  "random_forest": {
+    "accuracy": 0.8939,
+    "f1": 0.8933,
+    "auc": 0.9613
+  },
+  "logistic_regression": {
+    "accuracy": 0.752,
+    "f1": 0.7517,
+    "auc": 0.7916
+  },
+  "feature_importances": {
+    "קטגוריה_enc": 0.5476,
+    "מחיר_יחידה": 0.2307,
+    "כמות": 0.0392,
+    "month": 0.0364,
+    "רשת_enc": 0.0352
+  }
+}

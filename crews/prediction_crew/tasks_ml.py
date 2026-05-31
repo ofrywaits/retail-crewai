@@ -9,7 +9,7 @@ from crews.prediction_crew.agents_ml import (
 
 features_task = Task(
     description=(
-        "Use create_features to build the ML dataset. "
+        "Use run_feature_engineering with action='run' to build the ML dataset. "
         "Report: how many features were created, what the target distribution looks like, "
         "and what threshold was used for 'high profit'."
     ),
@@ -22,7 +22,7 @@ features_task = Task(
 
 training_task = Task(
     description=(
-        "Use train_models to train both models. "
+        "Use run_ml_training with action='run' to train both models. "
         "Report the accuracy, F1, and AUC for each model, and name the winner."
     ),
     expected_output=(
@@ -35,7 +35,7 @@ training_task = Task(
 
 evaluation_task = Task(
     description=(
-        "Use evaluate_models to create the full evaluation report. "
+        "Use run_ml_evaluation with action='run' to create the full evaluation report. "
         "Then summarize: which model is better and why, based on F1 and the confusion matrix."
     ),
     expected_output=(
@@ -48,12 +48,12 @@ evaluation_task = Task(
 
 model_card_task = Task(
     description=(
-        "Use create_model_card to save model_card.md. "
-        "In the card_text parameter, add 2-3 sentences about the model's business value: "
-        "how retailers can use it to improve profit margins."
+        "Based on the evaluation results, write 2-3 sentences in English about "
+        "the business value of this model: how retailers can use it to improve profit margins. "
+        "Return ONLY these 2-3 sentences as your Final Answer — do NOT call any tool."
     ),
     expected_output=(
-        "Confirmation that model_card.md was saved with business context included."
+        "2-3 English sentences describing the model's business value for retail profit optimization."
     ),
     agent=model_card_agent,
     context=[evaluation_task],

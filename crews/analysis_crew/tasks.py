@@ -15,7 +15,7 @@ from crews.analysis_crew.agents import (
 # ========================================
 ingest_task = Task(
     description=(
-        "Use the load_and_inspect_data tool to load the Israeli retail dataset. "
+        "Use the load_and_inspect_data tool with action='run' to load the Israeli retail dataset. "
         "Report: total rows, columns list, missing values per column, duplicate orders, "
         "negative values, numeric statistics, and date range. "
         "Be specific with numbers."
@@ -34,7 +34,7 @@ ingest_task = Task(
 # ========================================
 clean_task = Task(
     description=(
-        "Use the clean_and_save_data tool to clean the dataset. "
+        "Use the clean_and_save_data tool with action='run' to clean the dataset. "
         "After cleaning, summarize: how many rows were removed, what was removed, "
         "and confirm clean_data.csv was saved successfully."
     ),
@@ -52,7 +52,7 @@ clean_task = Task(
 # ========================================
 contract_task = Task(
     description=(
-        "Use the generate_dataset_contract tool to create dataset_contract.json. "
+        "Use the generate_dataset_contract tool with action='run' to create dataset_contract.json. "
         "Then summarize the contract: how many columns were documented, "
         "what types exist, and confirm the file was saved."
     ),

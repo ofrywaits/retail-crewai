@@ -34,11 +34,11 @@ COLORS = ["#2196F3", "#4CAF50", "#FF9800", "#E91E63", "#9C27B0", "#00BCD4"]
 
 
 @tool("generate_eda_report")
-def generate_eda_report(dummy: str = "run") -> str:
+def generate_eda_report(action: str) -> str:
     """
     קורא את clean_data.csv, מייצר 6 גרפים ובונה דו"ח HTML מלא.
     שומר ב-data/processed/eda_report.html.
-    מחזיר סיכום של הממצאים המרכזיים.
+    Call this tool with action="run" to execute. No other value is valid.
     """
     try:
         df = pd.read_csv(CLEAN_PATH, encoding="utf-8-sig")
@@ -216,9 +216,10 @@ def generate_insights_md(insights_text: str) -> str:
 
 
 @tool("get_data_statistics")
-def get_data_statistics(dummy: str = "run") -> str:
+def get_data_statistics(action: str) -> str:
     """
     מחשב סטטיסטיקות מפורטות מ-clean_data.csv לצורך כתיבת תובנות.
+    Call this tool with action="run" to execute. No other value is valid.
     """
     try:
         df = pd.read_csv(CLEAN_PATH, encoding="utf-8-sig")
@@ -227,28 +228,23 @@ def get_data_statistics(dummy: str = "run") -> str:
         months_heb = {1:"ינואר",2:"פברואר",3:"מרץ",4:"אפריל",5:"מאי",6:"יוני",
                       7:"יולי",8:"אוגוסט",9:"ספטמבר",10:"אוקטובר",11:"נובמבר",12:"דצמבר"}
 
+        cat_sales = df.groupby("קטגוריה")["מכירות_ש"].sum().round(0).to_dict()
+        cat_profit_pct = df.groupby("קטגוריה")["אחוז_רווח"].mean().round(1).to_dict()
+
         stats = {
             "כללי": {
-                "סה\"כ_מכירות_ש\"ח": round(df["מכירות_ש"].sum(), 0),
-                "סה\"כ_רווח_ש\"ח":    round(df["רווח_ש"].sum(), 0),
-                "אחוז_רווח":          round(df["רווח_ש"].sum() / df["מכירות_ש"].sum() * 100, 1),
-                "מספר_עסקאות":        len(df),
+                "סה_כ_מכירות": round(df["מכירות_ש"].sum(), 0),
+                "סה_כ_רווח":   round(df["רווח_ש"].sum(), 0),
+                "אחוז_רווח":   round(df["רווח_ש"].sum() / df["מכירות_ש"].sum() * 100, 1),
+                "עסקאות":      len(df),
             },
-            "לפי_קטגוריה": df.groupby("קטגוריה").agg(
-                מכירות=("מכירות_ש", "sum"),
-                רווח=("רווח_ש", "sum"),
-                עסקאות=("מספר_הזמנה", "count")
-            ).round(0).to_dict(),
-            "לפי_רשת": df.groupby("רשת")["מכירות_ש"].sum().round(0).to_dict(),
-            "לפי_אזור": df.groupby("אזור")["מכירות_ש"].sum().round(0).to_dict(),
-            "לפי_יום_שבוע": df.groupby("יום_בשבוע")["מכירות_ש"].sum().round(0).to_dict(),
-            "לפי_עונה": df.groupby("עונה")["מכירות_ש"].sum().round(0).to_dict(),
-            "חגים": df[df["חג"].notna() & (df["חג"] != "")].groupby("חג")["מכירות_ש"].sum().round(0).to_dict(),
-            "חודש_שיא": months_heb.get(
-                int(df.groupby(df["תאריך"].dt.month)["מכירות_ש"].sum().idxmax()), "?"
-            ),
-            "יום_חזק_ביותר": df.groupby("יום_בשבוע")["מכירות_ש"].sum().idxmax(),
-            "קטגוריה_רווחית_ביותר": df.groupby("קטגוריה")["אחוז_רווח"].mean().idxmax(),
+            "מכירות_לפי_קטגוריה": cat_sales,
+            "רווחיות_לפי_קטגוריה": cat_profit_pct,
+            "מכירות_לפי_אזור": df.groupby("אזור")["מכירות_ש"].sum().round(0).to_dict(),
+            "מכירות_לפי_עונה": df.groupby("עונה")["מכירות_ש"].sum().round(0).to_dict(),
+            "חודש_שיא": months_heb.get(int(df.groupby(df["תאריך"].dt.month)["מכירות_ש"].sum().idxmax()), "?"),
+            "יום_חזק": df.groupby("יום_בשבוע")["מכירות_ש"].sum().idxmax(),
+            "קטגוריה_רווחית": df.groupby("קטגוריה")["אחוז_רווח"].mean().idxmax(),
         }
 
         return json.dumps(stats, ensure_ascii=False, indent=2, default=str)

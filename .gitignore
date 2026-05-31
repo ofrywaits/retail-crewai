@@ -1,12 +1,26 @@
-# לא מעלים לגיטהאב
+# סודות — לעולם לא ב-GitHub
 .env
+*.env
+
+# Python
 __pycache__/
 *.pyc
 *.pyo
-.DS_Store
+.Python
+
+# Virtual Environment
 venv/
 .venv/
-models/*.pkl
-models/*.joblib
+
+# macOS
+.DS_Store
+
+# נתונים גולמיים (גדולים מדי)
 data/raw/
-data/processed/
+
+# לוגים
+logs/
+
+# IDE
+.vscode/
+.idea/

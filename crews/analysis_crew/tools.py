@@ -14,10 +14,10 @@ CONTRACT_PATH = "data/processed/dataset_contract.json"
 
 
 @tool("load_and_inspect_data")
-def load_and_inspect_data(dummy: str = "run") -> str:
+def load_and_inspect_data(action: str) -> str:
     """
-    טוען את הדאטאסט הגולמי ומחזיר דו"ח מפורט:
-    מספר שורות, עמודות, ערכים חסרים, סטטיסטיקות בסיסיות.
+    טוען את הדאטאסט הגולמי ומחזיר דו"ח מפורט.
+    Call this tool with action="run" to execute. No other value is valid.
     """
     try:
         df = pd.read_csv(RAW_PATH, encoding="utf-8-sig")
@@ -38,21 +38,18 @@ def load_and_inspect_data(dummy: str = "run") -> str:
         neg_qty   = int((df["כמות"] <= 0).sum())
         dups      = int(df.duplicated(subset=["מספר_הזמנה"]).sum())
 
+        # קיצור הפלט לחיסכון בטוקנים
+        key_stats = {c: stats[c] for c in ["מכירות_ש", "כמות", "מחיר_יחידה", "אחוז_רווח"] if c in stats}
         report = {
             "rows": len(df),
+            "columns_count": len(df.columns),
             "columns": list(df.columns),
             "missing_values": missing_cols,
             "duplicate_order_ids": dups,
             "negative_sales_rows": neg_sales,
-            "negative_quantity_rows": neg_qty,
-            "numeric_stats": stats,
+            "key_numeric_stats": key_stats,
             "categories": df["קטגוריה"].unique().tolist(),
-            "chains": df["רשת"].unique().tolist(),
-            "cities": df["עיר"].unique().tolist(),
-            "date_range": {
-                "from": str(df["תאריך"].min()),
-                "to":   str(df["תאריך"].max()),
-            },
+            "date_range": {"from": str(df["תאריך"].min()), "to": str(df["תאריך"].max())},
         }
 
         return json.dumps(report, ensure_ascii=False, indent=2, default=str)
@@ -62,9 +59,10 @@ def load_and_inspect_data(dummy: str = "run") -> str:
 
 
 @tool("clean_and_save_data")
-def clean_and_save_data(dummy: str = "run") -> str:
+def clean_and_save_data(action: str) -> str:
     """
-    מנקה את הדאטאסט הגולמי:
+    מנקה את הדאטאסט הגולמי.
+    Call this tool with action="run" to execute. No other value is valid.
     - מסיר כפילויות
     - מסיר שורות עם מכירות/כמות שליליות
     - מתקן סוגי נתונים
@@ -119,9 +117,10 @@ def clean_and_save_data(dummy: str = "run") -> str:
 
 
 @tool("generate_dataset_contract")
-def generate_dataset_contract(dummy: str = "run") -> str:
+def generate_dataset_contract(action: str) -> str:
     """
-    קורא את clean_data.csv ומייצר dataset_contract.json:
+    קורא את clean_data.csv ומייצר dataset_contract.json.
+    Call this tool with action="run" to execute. No other value is valid.
     סכמה מלאה של הדאטאסט — שמות עמודות, סוגים, טווחים, ערכים אפשריים.
     """
     try:

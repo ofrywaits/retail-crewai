@@ -26,11 +26,11 @@ EVAL_PATH       = "data/processed/evaluation_report.md"
 CARD_PATH       = "data/processed/model_card.md"
 
 
-@tool("create_features")
-def create_features(dummy: str = "run") -> str:
+@tool("run_feature_engineering")
+def create_features(action: str) -> str:
     """
     טוען clean_data.csv, מבצע Feature Engineering ושומר features.csv.
-    מייצר: קידוד קטגוריאלי, פיצ'רים מתאריך, משתנה מטרה (is_high_profit).
+    Call this tool with action="run" to execute. No other value is valid.
     """
     try:
         df = pd.read_csv(CLEAN_PATH, encoding="utf-8-sig")
@@ -93,11 +93,12 @@ def create_features(dummy: str = "run") -> str:
         return f"שגיאה ב-Feature Engineering: {e}"
 
 
-@tool("train_models")
-def train_models(dummy: str = "run") -> str:
+@tool("run_ml_training")
+def train_models(action: str) -> str:
     """
     טוען features.csv, מאמן Random Forest ו-Logistic Regression,
     שומר את שני המודלים ואת המודל הטוב יותר כ-model.pkl.
+    Call this tool with action="run" to execute. No other value is valid.
     """
     try:
         df = pd.read_csv(FEATURES_PATH, encoding="utf-8-sig")
@@ -166,10 +167,11 @@ def train_models(dummy: str = "run") -> str:
         return f"שגיאה באימון מודלים: {e}"
 
 
-@tool("evaluate_models")
-def evaluate_models(dummy: str = "run") -> str:
+@tool("run_ml_evaluation")
+def evaluate_models(action: str) -> str:
     """
     מעריך את שני המודלים ושומר evaluation_report.md מפורט.
+    Call this tool with action="run" to execute. No other value is valid.
     """
     try:
         df   = pd.read_csv(FEATURES_PATH, encoding="utf-8-sig")
