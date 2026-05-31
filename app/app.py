@@ -25,6 +25,30 @@ def heb(text):
 def heb_list(lst):
     return [heb(x) for x in lst]
 
+def rtl_table(df, max_rows=None):
+    """Render a DataFrame as a styled RTL HTML table with Hebrew support."""
+    show = df.head(max_rows) if max_rows else df
+    table_html = show.to_html(index=False, escape=True, border=0)
+    st.markdown(f"""
+    <div style="direction:rtl; overflow-x:auto; margin:8px 0;">
+    <style>
+    .rtl-tbl {{ width:100%; border-collapse:collapse; direction:rtl; font-size:13px; }}
+    .rtl-tbl thead tr {{ background:rgba(99,102,241,0.18); }}
+    .rtl-tbl th {{
+        color:#a78bfa; padding:9px 14px; text-align:right !important;
+        border:1px solid rgba(255,255,255,0.1); font-weight:600;
+    }}
+    .rtl-tbl td {{
+        color:#e2e8f0; padding:7px 14px; text-align:right !important;
+        border:1px solid rgba(255,255,255,0.07); direction:rtl;
+    }}
+    .rtl-tbl tbody tr:nth-child(even) td {{ background:rgba(255,255,255,0.03); }}
+    .rtl-tbl tbody tr:hover td {{ background:rgba(99,102,241,0.09); }}
+    </style>
+    {table_html.replace('<table','<table class="rtl-tbl"')}
+    </div>
+    """, unsafe_allow_html=True)
+
 def style_chart(fig, ax):
     """Glassmorphism dark style for all matplotlib charts."""
     fig.patch.set_facecolor('#12122a')
@@ -692,66 +716,205 @@ elif page == "🔮 ניבוי":
 # ════════════════════════════════════════════════════════════════════════════
 elif page == "📤 העלה נתונים":
     st.title("📤 העלה נתונים שלך")
-    st.markdown("**העלה קובץ CSV עם נתוני מכירות — המערכת תנתח אותם אוטומטית עם CrewAI**")
-    st.markdown("---")
 
-    # הורדת תבנית
-    st.subheader("שלב 1: הורד תבנית")
-    st.markdown("הקובץ חייב להכיל את העמודות הבאות:")
-    st.code(", ".join(REQUIRED_COLS), language=None)
+    # Hero description
+    st.markdown("""
+    <div style="
+        background: rgba(99,102,241,0.12);
+        border: 1px solid rgba(99,102,241,0.35);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 28px;
+        direction: rtl;
+        text-align: right;
+    ">
+        <h4 style="color:#a78bfa; margin:0 0 8px 0;">איך זה עובד?</h4>
+        <p style="color:#cbd5e1; margin:0; font-size:15px; line-height:1.7;">
+            העלה קובץ CSV עם נתוני המכירות שלך — המערכת תנתח אותם אוטומטית באמצעות <strong style="color:#a78bfa;">7 סוכני AI</strong>.
+            תוך כ-2 דקות תקבל ניתוח עסקי מלא, גרפים, תובנות ומודל ML מאומן.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # ── שלבים ויזואליים ───────────────────────────────────────────────────────
+    step_cols = st.columns(3)
+    steps = [
+        ("1", "⬇️", "הורד תבנית", "הורד קובץ דוגמה עם המבנה הנכון"),
+        ("2", "📂", "העלה קובץ", "גרור או בחר קובץ CSV מהמחשב שלך"),
+        ("3", "🚀", "הרץ ניתוח", "7 סוכני AI יעבדו את הנתונים שלך"),
+    ]
+    for col, (num, icon, title, desc) in zip(step_cols, steps):
+        with col:
+            st.markdown(f"""
+            <div style="
+                background: rgba(255,255,255,0.05);
+                border: 1px solid rgba(255,255,255,0.12);
+                border-radius: 16px;
+                padding: 20px 16px;
+                text-align: center;
+                height: 130px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            ">
+                <div style="font-size:28px; margin-bottom:6px;">{icon}</div>
+                <div style="color:#a78bfa; font-weight:700; font-size:13px; margin-bottom:4px;">שלב {num}</div>
+                <div style="color:#f1f5f9; font-weight:600; font-size:14px;">{title}</div>
+                <div style="color:#94a3b8; font-size:12px; margin-top:4px;">{desc}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── שלב 1: הורד תבנית ────────────────────────────────────────────────────
+    st.markdown("""
+    <div style="
+        display:flex; align-items:center; gap:10px;
+        direction:rtl; margin-bottom:14px;
+    ">
+        <span style="
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            color:white; font-weight:700; font-size:13px;
+            padding:4px 12px; border-radius:20px;
+        ">שלב 1</span>
+        <span style="color:#f1f5f9; font-size:18px; font-weight:600;">⬇️ הורד תבנית</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # עמודות נדרשות מחולקות לקבוצות
+    col_groups = {
+        "🆔 זיהוי": ["מספר_הזמנה"],
+        "📅 זמן": ["תאריך", "יום_בשבוע", "עונה", "חג"],
+        "📍 מיקום": ["רשת", "עיר", "אזור"],
+        "📦 מוצר": ["קטגוריה", "כמות"],
+        "💰 כספים": ["מחיר_יחידה", "הנחה_אחוז", "מכירות_ש", "רווח_ש", "אחוז_רווח"],
+    }
+
+    st.markdown("<p style='color:#94a3b8; font-size:13px; direction:rtl; text-align:right; margin-bottom:10px;'>הקובץ חייב להכיל את העמודות הבאות (15 עמודות סה\"כ):</p>", unsafe_allow_html=True)
+
+    group_cols = st.columns(len(col_groups))
+    for col, (group_name, cols) in zip(group_cols, col_groups.items()):
+        with col:
+            cols_html = "".join([
+                f"<div style='background:rgba(99,102,241,0.15);border-radius:6px;padding:3px 8px;margin:3px 0;font-size:12px;color:#c4b5fd;direction:ltr;text-align:left;'>{c}</div>"
+                for c in cols
+            ])
+            st.markdown(f"""
+            <div style="
+                background: rgba(255,255,255,0.04);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                padding: 12px;
+                min-height: 120px;
+            ">
+                <div style="color:#a78bfa; font-weight:600; font-size:13px;
+                            margin-bottom:8px; text-align:right;">{group_name}</div>
+                {cols_html}
+            </div>
+            """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
 
     try:
         df_template = pd.read_csv(RAW_PATH, encoding="utf-8-sig").head(10)
         csv_bytes = df_template.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
         st.download_button(
-            label="⬇️ הורד קובץ דוגמה (10 שורות)",
+            label="⬇️ הורד קובץ דוגמה (10 שורות ראשונות)",
             data=csv_bytes,
             file_name="retail_template.csv",
             mime="text/csv",
+            use_container_width=True,
         )
     except FileNotFoundError:
-        st.info("קובץ הדוגמה לא נמצא.")
+        st.warning("קובץ הדוגמה לא נמצא — צור קובץ CSV עם העמודות הרשומות למעלה.")
 
-    st.markdown("---")
+    st.markdown("<br>", unsafe_allow_html=True)
 
-    # העלאת קובץ
-    st.subheader("שלב 2: העלה את הקובץ שלך")
-    uploaded_file = st.file_uploader("בחר קובץ CSV", type=["csv"])
+    # ── שלב 2: העלה קובץ ─────────────────────────────────────────────────────
+    st.markdown("""
+    <div style="
+        display:flex; align-items:center; gap:10px;
+        direction:rtl; margin-bottom:14px;
+    ">
+        <span style="
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            color:white; font-weight:700; font-size:13px;
+            padding:4px 12px; border-radius:20px;
+        ">שלב 2</span>
+        <span style="color:#f1f5f9; font-size:18px; font-weight:600;">📂 העלה את הקובץ שלך</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("<p style='color:#94a3b8; font-size:13px; direction:rtl; text-align:right;'>קובץ CSV בלבד · encoding: UTF-8 · גודל מקסימלי: 200MB</p>", unsafe_allow_html=True)
+
+    uploaded_file = st.file_uploader("בחר קובץ CSV", type=["csv"], label_visibility="collapsed")
 
     if uploaded_file:
         try:
-            # ניסיון קריאה עם utf-8-sig, אחר כך utf-8
             try:
                 df_new = pd.read_csv(uploaded_file, encoding="utf-8-sig")
             except Exception:
                 uploaded_file.seek(0)
                 df_new = pd.read_csv(uploaded_file, encoding="utf-8")
 
-            # ולידציה
             missing_cols = [c for c in REQUIRED_COLS if c not in df_new.columns]
 
             if missing_cols:
-                st.error(f"❌ עמודות חסרות בקובץ: {', '.join(missing_cols)}")
-                st.info("הורד את קובץ הדוגמה למעלה ובדוק שהעמודות תואמות.")
+                st.error(f"❌ עמודות חסרות: {', '.join(missing_cols)}")
+                st.info("הורד את קובץ הדוגמה בשלב 1 ובדוק שהעמודות תואמות.")
             else:
-                st.success(f"✅ הקובץ תקין — {len(df_new):,} שורות, {len(df_new.columns)} עמודות")
+                # סטטוס הקובץ
+                stat_c1, stat_c2, stat_c3 = st.columns(3)
+                with stat_c1:
+                    st.metric("📄 שורות", f"{len(df_new):,}")
+                with stat_c2:
+                    st.metric("📋 עמודות", len(df_new.columns))
+                with stat_c3:
+                    st.metric("✅ סטטוס", "תקין")
 
-                # תצוגה מקדימה
-                with st.expander("👀 תצוגה מקדימה (5 שורות ראשונות)"):
-                    st.dataframe(df_new.head())
+                with st.expander("👀 תצוגה מקדימה — 5 שורות ראשונות"):
+                    rtl_table(df_new, max_rows=5)
 
-                st.markdown("---")
-                st.subheader("שלב 3: הרץ ניתוח")
-                st.markdown("לחץ על הכפתור — **7 סוכני AI** ינתחו את הנתונים שלך (~2 דקות)")
+                st.markdown("<br>", unsafe_allow_html=True)
 
-                if st.button("🚀 הרץ ניתוח מלא", use_container_width=True, type="primary"):
+                # ── שלב 3: הרץ ניתוח ─────────────────────────────────────────
+                st.markdown("""
+                <div style="
+                    display:flex; align-items:center; gap:10px;
+                    direction:rtl; margin-bottom:14px;
+                ">
+                    <span style="
+                        background: linear-gradient(135deg,#6366f1,#8b5cf6);
+                        color:white; font-weight:700; font-size:13px;
+                        padding:4px 12px; border-radius:20px;
+                    ">שלב 3</span>
+                    <span style="color:#f1f5f9; font-size:18px; font-weight:600;">🚀 הרץ ניתוח מלא</span>
+                </div>
+                """, unsafe_allow_html=True)
 
-                    # שמירת הקובץ כ-Raw Data
+                st.markdown("""
+                <div style="
+                    background: rgba(16,185,129,0.08);
+                    border: 1px solid rgba(16,185,129,0.25);
+                    border-radius: 12px;
+                    padding: 14px 18px;
+                    direction: rtl;
+                    text-align: right;
+                    margin-bottom: 16px;
+                ">
+                    <p style="color:#6ee7b7; margin:0; font-size:14px;">
+                        <strong>7 סוכני AI</strong> ינתחו את הנתונים שלך ויפיקו:
+                        ניקוי נתונים · ניתוח EDA · תובנות עסקיות · מודל ML · כרטיס מודל
+                        <br><span style="color:#94a3b8; font-size:12px;">⏱ זמן משוער: 2–3 דקות</span>
+                    </p>
+                </div>
+                """, unsafe_allow_html=True)
+
+                if st.button("🚀 הרץ ניתוח מלא עם CrewAI", use_container_width=True, type="primary"):
                     df_new.to_csv(RAW_PATH, index=False, encoding="utf-8-sig")
-                    st.info(f"✅ הקובץ נשמר ({len(df_new):,} שורות)")
+                    st.info(f"✅ הקובץ נשמר — {len(df_new):,} שורות")
 
-                    # הרצת ה-Flow
-                    with st.spinner("🤖 סוכני CrewAI עובדים על הנתונים שלך... (אנא המתן)"):
+                    with st.spinner("🤖 סוכני CrewAI עובדים... אנא המתן"):
                         result = subprocess.run(
                             [sys.executable, "run_flow.py"],
                             capture_output=True,
@@ -762,15 +925,31 @@ elif page == "📤 העלה נתונים":
 
                     if result.returncode == 0:
                         st.success("### ✅ הניתוח הושלם בהצלחה!")
-                        st.markdown("כל הקבצים עודכנו עם הנתונים שלך:")
-                        st.markdown("""
-- `clean_data.csv` — נתונים נקיים
-- `eda_report.html` — דו"ח גרפים
-- `insights.md` — תובנות עסקיות
-- `model.pkl` — מודל ML מאומן
-- `evaluation_report.md` — ביצועי המודל
-""")
-                        st.info("🔄 עבור לעמוד **דשבורד ראשי** כדי לראות את התוצאות על הנתונים שלך")
+                        out_c1, out_c2 = st.columns(2)
+                        with out_c1:
+                            st.markdown("""
+                            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;direction:rtl;">
+                                <div style="color:#a78bfa;font-weight:600;margin-bottom:8px;">📁 קבצים שנוצרו</div>
+                                <div style="color:#cbd5e1;font-size:13px;line-height:2;">
+                                    📄 clean_data.csv<br>
+                                    📊 eda_report.html<br>
+                                    💡 insights.md<br>
+                                    🤖 model.pkl<br>
+                                    📋 evaluation_report.md
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with out_c2:
+                            st.markdown("""
+                            <div style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25);border-radius:12px;padding:14px;direction:rtl;">
+                                <div style="color:#6ee7b7;font-weight:600;margin-bottom:8px;">🎯 מה עכשיו?</div>
+                                <div style="color:#cbd5e1;font-size:13px;line-height:2;">
+                                    👈 עבור לעמוד <strong>דשבורד</strong><br>
+                                    לצפייה בגרפים ותוצאות<br>
+                                    על הנתונים שלך
+                                </div>
+                            </div>
+                            """, unsafe_allow_html=True)
                         st.cache_data.clear()
                     else:
                         st.error("❌ אירעה שגיאה בהרצת הניתוח")
