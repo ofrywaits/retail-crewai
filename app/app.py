@@ -63,6 +63,7 @@ def style_chart(fig, ax):
 ROOT          = Path(__file__).parent.parent
 CLEAN_PATH    = ROOT / "data/processed/clean_data.csv"
 RAW_PATH      = ROOT / "data/raw/israeli_retail.csv"
+TEMPLATE_PATH = ROOT / "data/retail_template.csv"
 INSIGHTS_PATH = ROOT / "data/processed/insights.md"
 EVAL_PATH     = ROOT / "data/processed/evaluation_report.md"
 META_PATH     = ROOT / "models/model_meta.json"
@@ -768,65 +769,84 @@ elif page == "📤 העלה נתונים":
 
     # ── שלב 1: הורד תבנית ────────────────────────────────────────────────────
     st.markdown("""
-    <div style="
-        display:flex; align-items:center; gap:10px;
-        direction:rtl; margin-bottom:14px;
-    ">
-        <span style="
-            background: linear-gradient(135deg,#6366f1,#8b5cf6);
-            color:white; font-weight:700; font-size:13px;
-            padding:4px 12px; border-radius:20px;
-        ">שלב 1</span>
-        <span style="color:#f1f5f9; font-size:18px; font-weight:600;">⬇️ הורד תבנית</span>
+    <div style="display:flex;align-items:center;gap:10px;direction:rtl;margin-bottom:14px;">
+        <span style="background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;
+                     font-weight:700;font-size:13px;padding:4px 12px;border-radius:20px;">שלב 1</span>
+        <span style="color:#f1f5f9;font-size:18px;font-weight:600;">⬇️ הורד תבנית</span>
     </div>
     """, unsafe_allow_html=True)
 
-    # עמודות נדרשות מחולקות לקבוצות
-    col_groups = {
-        "🆔 זיהוי": ["מספר_הזמנה"],
-        "📅 זמן": ["תאריך", "יום_בשבוע", "עונה", "חג"],
-        "📍 מיקום": ["רשת", "עיר", "אזור"],
-        "📦 מוצר": ["קטגוריה", "כמות"],
-        "💰 כספים": ["מחיר_יחידה", "הנחה_אחוז", "מכירות_ש", "רווח_ש", "אחוז_רווח"],
-    }
+    # ── מדריך עמודות ─────────────────────────────────────────────────────────
+    col_guide = [
+        ("מספר_הזמנה",  "🆔 זיהוי",   "מזהה ייחודי לכל הזמנה",             "טקסט חופשי",                                          "ORD-0001"),
+        ("תאריך",        "📅 זמן",     "תאריך ביצוע העסקה",                  "YYYY-MM-DD",                                          "2024-03-15"),
+        ("יום_בשבוע",   "📅 זמן",     "יום בשבוע בעברית",                   "ראשון / שני / שלישי / רביעי / חמישי / שישי / שבת",    "שני"),
+        ("עונה",         "📅 זמן",     "עונת השנה",                           "חורף / אביב / קיץ / סתיו",                            "קיץ"),
+        ("חג",           "📅 זמן",     "האם מדובר בחג או אירוע מיוחד?",      "0 = לא · 1 = כן",                                     "0"),
+        ("רשת",          "📍 מיקום",  "שם רשת הקמעונות",                    "שם הרשת (לדוגמה: שופרסל, רמי לוי, ויקטורי)",         "שופרסל"),
+        ("עיר",          "📍 מיקום",  "העיר בה בוצעה המכירה",               "שם עיר בעברית",                                        "תל אביב"),
+        ("אזור",         "📍 מיקום",  "האזור הגאוגרפי",                      "מרכז / צפון / דרום / ירושלים / שרון",                 "מרכז"),
+        ("קטגוריה",     "📦 מוצר",    "קטגוריית המוצר",                      "אלקטרוניקה / בגדים והנעלה / בית ומשק / בריאות ויופי / מזון ומשקאות", "אלקטרוניקה"),
+        ("כמות",         "📦 מוצר",   "כמות יחידות שנמכרו",                  "מספר שלם (1–999)",                                    "3"),
+        ("מחיר_יחידה",  "💰 כספים",  "מחיר ליחידה בשקלים (לפני הנחה)",     "מספר עשרוני חיובי",                                   "299.90"),
+        ("הנחה_אחוז",   "💰 כספים",  "אחוז ההנחה שניתן",                    "0–50 (ללא סימן %)",                                   "10"),
+        ("מכירות_ש",    "💰 כספים",  "סך המכירות בשקלים (אחרי הנחה)",      "כמות × מחיר × (1 − הנחה/100)",                        "809.73"),
+        ("רווח_ש",      "💰 כספים",  "הרווח הגולמי בשקלים",                 "מספר עשרוני",                                          "202.43"),
+        ("אחוז_רווח",   "💰 כספים",  "אחוז הרווח מסך המכירות",             "0–100",                                                "25.0"),
+    ]
+    guide_rows = "".join([
+        f"""<tr>
+            <td style="direction:ltr;text-align:left;font-family:monospace;color:#c4b5fd;">{col}</td>
+            <td style="text-align:right;">{grp}</td>
+            <td style="text-align:right;">{desc}</td>
+            <td style="text-align:right;color:#94a3b8;font-size:12px;">{vals}</td>
+            <td style="direction:ltr;text-align:left;font-family:monospace;color:#6ee7b7;">{ex}</td>
+        </tr>"""
+        for col, grp, desc, vals, ex in col_guide
+    ])
+    st.markdown(f"""
+    <div style="direction:rtl;overflow-x:auto;margin:0 0 16px 0;">
+    <style>
+    .guide-tbl{{width:100%;border-collapse:collapse;font-size:13px;direction:rtl;}}
+    .guide-tbl th{{background:rgba(99,102,241,0.25);color:#a78bfa;padding:9px 12px;
+                   text-align:right;border:1px solid rgba(255,255,255,0.1);}}
+    .guide-tbl td{{color:#e2e8f0;padding:7px 12px;border:1px solid rgba(255,255,255,0.07);}}
+    .guide-tbl tbody tr:nth-child(even) td{{background:rgba(255,255,255,0.03);}}
+    .guide-tbl tbody tr:hover td{{background:rgba(99,102,241,0.09);}}
+    </style>
+    <table class="guide-tbl">
+      <thead><tr>
+        <th style="text-align:left;">שם העמודה</th>
+        <th>קטגוריה</th>
+        <th>תיאור</th>
+        <th>ערכים תקינים</th>
+        <th style="text-align:left;">דוגמה</th>
+      </tr></thead>
+      <tbody>{guide_rows}</tbody>
+    </table>
+    </div>
+    """, unsafe_allow_html=True)
 
-    st.markdown("<p style='color:#94a3b8; font-size:13px; direction:rtl; text-align:right; margin-bottom:10px;'>הקובץ חייב להכיל את העמודות הבאות (15 עמודות סה\"כ):</p>", unsafe_allow_html=True)
-
-    group_cols = st.columns(len(col_groups))
-    for col, (group_name, cols) in zip(group_cols, col_groups.items()):
-        with col:
-            cols_html = "".join([
-                f"<div style='background:rgba(99,102,241,0.15);border-radius:6px;padding:3px 8px;margin:3px 0;font-size:12px;color:#c4b5fd;direction:ltr;text-align:left;'>{c}</div>"
-                for c in cols
-            ])
-            st.markdown(f"""
-            <div style="
-                background: rgba(255,255,255,0.04);
-                border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 12px;
-                padding: 12px;
-                min-height: 120px;
-            ">
-                <div style="color:#a78bfa; font-weight:600; font-size:13px;
-                            margin-bottom:8px; text-align:right;">{group_name}</div>
-                {cols_html}
-            </div>
-            """, unsafe_allow_html=True)
-
-    st.markdown("<br>", unsafe_allow_html=True)
+    # ── תצוגת קובץ הדוגמה + כפתור הורדה ─────────────────────────────────────
+    with st.expander("👀 הצג תצוגה מקדימה של קובץ הדוגמה (10 שורות)"):
+        try:
+            df_preview = pd.read_csv(TEMPLATE_PATH, encoding="utf-8-sig")
+            rtl_table(df_preview)
+        except FileNotFoundError:
+            st.warning("קובץ התבנית לא נמצא.")
 
     try:
-        df_template = pd.read_csv(RAW_PATH, encoding="utf-8-sig").head(10)
-        csv_bytes = df_template.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
+        with open(TEMPLATE_PATH, "rb") as f:
+            template_bytes = f.read()
         st.download_button(
-            label="⬇️ הורד קובץ דוגמה (10 שורות ראשונות)",
-            data=csv_bytes,
+            label="⬇️ הורד קובץ תבנית (retail_template.csv)",
+            data=template_bytes,
             file_name="retail_template.csv",
             mime="text/csv",
             use_container_width=True,
         )
     except FileNotFoundError:
-        st.warning("קובץ הדוגמה לא נמצא — צור קובץ CSV עם העמודות הרשומות למעלה.")
+        st.warning("קובץ התבנית לא נמצא.")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
