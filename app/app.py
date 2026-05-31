@@ -20,12 +20,20 @@ from pathlib import Path
 from bidi.algorithm import get_display
 
 def heb(text):
-    """מתקן כיוון עברית ב-matplotlib (RTL)."""
     return get_display(str(text))
 
 def heb_list(lst):
-    """מתקן רשימת מחרוזות עבריות."""
     return [heb(x) for x in lst]
+
+def style_chart(fig, ax):
+    """Glassmorphism dark style for all matplotlib charts."""
+    fig.patch.set_facecolor('#12122a')
+    ax.set_facecolor('#1a1a2e')
+    ax.tick_params(colors='#94a3b8', labelsize=8)
+    ax.xaxis.label.set_color('#94a3b8')
+    ax.yaxis.label.set_color('#94a3b8')
+    for spine in ax.spines.values():
+        spine.set_edgecolor('#2d2d4e')
 
 # ── נתיבים ──────────────────────────────────────────────────────────────────
 ROOT          = Path(__file__).parent.parent
@@ -43,8 +51,20 @@ REQUIRED_COLS = [
     "מחיר_יחידה", "הנחה_אחוז", "מכירות_ש", "רווח_ש", "אחוז_רווח",
 ]
 
-COLORS = ["#2196F3", "#4CAF50", "#FF9800", "#E91E63", "#9C27B0", "#00BCD4"]
-sns.set_theme(style="whitegrid")
+COLORS = ["#6366f1", "#8b5cf6", "#06b6d4", "#10b981", "#f59e0b", "#ef4444"]
+
+sns.set_theme(style="dark_background")
+matplotlib.rcParams.update({
+    "text.color": "#e2e8f0",
+    "axes.labelcolor": "#94a3b8",
+    "xtick.color": "#94a3b8",
+    "ytick.color": "#94a3b8",
+    "figure.facecolor": "#12122a",
+    "axes.facecolor": "#1a1a2e",
+    "axes.edgecolor": "#2d2d4e",
+    "grid.color": "#2d2d4e",
+    "grid.alpha": 0.5,
+})
 
 # ── הגדרות עמוד ─────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -56,13 +76,150 @@ st.set_page_config(
 
 st.markdown("""
 <style>
-div[data-testid="metric-container"] {
-    background: white;
-    border: 1px solid #e0e0e0;
-    border-radius: 10px;
-    padding: 10px 15px;
-    box-shadow: 0 1px 4px rgba(0,0,0,.08);
+/* ═══════════════════════════════════════════
+   GLASSMORPHISM THEME — Israeli Retail AI
+═══════════════════════════════════════════ */
+
+/* Background */
+.stApp {
+    background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%) !important;
+    background-attachment: fixed !important;
 }
+.main .block-container {
+    background: transparent !important;
+    padding-top: 1.5rem !important;
+}
+
+/* Metric cards — glass */
+[data-testid="metric-container"] {
+    background: rgba(255,255,255,0.06) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid rgba(255,255,255,0.12) !important;
+    border-radius: 16px !important;
+    padding: 18px 16px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.35) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+[data-testid="metric-container"]:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 40px rgba(99,102,241,0.25) !important;
+}
+[data-testid="stMetricValue"] > div {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 1.5rem !important;
+}
+[data-testid="stMetricLabel"] > div {
+    color: rgba(255,255,255,0.5) !important;
+    font-size: 0.75rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.07em !important;
+}
+
+/* Sidebar */
+section[data-testid="stSidebar"] {
+    background: rgba(15,12,41,0.85) !important;
+    backdrop-filter: blur(20px) !important;
+    -webkit-backdrop-filter: blur(20px) !important;
+    border-right: 1px solid rgba(255,255,255,0.07) !important;
+}
+section[data-testid="stSidebar"] .stRadio label,
+section[data-testid="stSidebar"] p,
+section[data-testid="stSidebar"] span,
+section[data-testid="stSidebar"] div {
+    color: rgba(255,255,255,0.85) !important;
+}
+
+/* Titles — gradient text */
+h1 {
+    background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+}
+h2 {
+    color: #c4b5fd !important;
+    font-weight: 700 !important;
+}
+h3, h4 {
+    color: #93c5fd !important;
+    font-weight: 600 !important;
+}
+p, .stMarkdown {
+    color: rgba(255,255,255,0.8) !important;
+}
+
+/* Buttons — gradient */
+.stButton > button {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.02em !important;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.4) !important;
+    transition: all 0.3s ease !important;
+}
+.stButton > button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 28px rgba(99,102,241,0.6) !important;
+}
+
+/* Alerts */
+.stSuccess { background: rgba(16,185,129,0.1) !important; border: 1px solid rgba(16,185,129,0.3) !important; border-radius: 12px !important; color: #6ee7b7 !important; }
+.stWarning { background: rgba(245,158,11,0.1) !important; border: 1px solid rgba(245,158,11,0.3) !important; border-radius: 12px !important; color: #fcd34d !important; }
+.stError   { background: rgba(239,68,68,0.1)  !important; border: 1px solid rgba(239,68,68,0.3)  !important; border-radius: 12px !important; color: #fca5a5 !important; }
+.stInfo    { background: rgba(99,102,241,0.1)  !important; border: 1px solid rgba(99,102,241,0.3) !important; border-radius: 12px !important; color: #a5b4fc !important; }
+
+/* Inputs */
+.stSelectbox > div > div,
+.stNumberInput input,
+.stTextInput input,
+.stTextArea textarea {
+    background: rgba(255,255,255,0.07) !important;
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    border-radius: 10px !important;
+    color: #ffffff !important;
+}
+/* Slider */
+.stSlider [data-baseweb="slider"] { filter: hue-rotate(220deg); }
+
+/* Expander */
+.streamlit-expanderHeader {
+    background: rgba(255,255,255,0.05) !important;
+    border-radius: 10px !important;
+    color: rgba(255,255,255,0.9) !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* Divider */
+hr { border-color: rgba(255,255,255,0.07) !important; }
+
+/* Code */
+code, pre {
+    background: rgba(99,102,241,0.12) !important;
+    border-radius: 8px !important;
+    color: #a5b4fc !important;
+    border: 1px solid rgba(99,102,241,0.2) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.45); border-radius: 3px; }
+
+/* DataFrames */
+[data-testid="stDataFrame"] {
+    background: rgba(255,255,255,0.04) !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* Caption */
+.stCaption, small { color: rgba(255,255,255,0.45) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -166,11 +323,12 @@ if page == "🏠 דשבורד ראשי":
         st.subheader("מכירות לפי קטגוריה")
         cat = df.groupby("קטגוריה")["מכירות_ש"].sum().sort_values()
         fig, ax = plt.subplots(figsize=(7, 4))
+        style_chart(fig, ax)
         ax.barh(heb_list(cat.index), cat.values, color=COLORS[:len(cat)])
         ax.set_xlabel(heb("מכירות (₪)"))
         for bar in ax.patches:
             ax.text(bar.get_width() * 1.01, bar.get_y() + bar.get_height() / 2,
-                    f"₪{bar.get_width()/1e6:.1f}M", va="center", fontsize=8)
+                    f"₪{bar.get_width()/1e6:.1f}M", va="center", fontsize=8, color="#e2e8f0")
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig)
         plt.close()
@@ -179,9 +337,10 @@ if page == "🏠 דשבורד ראשי":
         st.subheader("טרנד מכירות חודשי")
         monthly = df.groupby(df["תאריך"].dt.to_period("M"))["מכירות_ש"].sum()
         fig, ax = plt.subplots(figsize=(7, 4))
-        monthly.plot(ax=ax, color="#2196F3", linewidth=2, marker="o", markersize=3)
+        style_chart(fig, ax)
+        monthly.plot(ax=ax, color="#6366f1", linewidth=2, marker="o", markersize=3)
         ax.set_ylabel(heb("מכירות (₪)"))
-        ax.grid(True, alpha=0.3)
+        ax.grid(True, color="#2d2d4e", alpha=0.5)
         plt.xticks(rotation=45, fontsize=7)
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig)
@@ -226,6 +385,7 @@ elif page == "📊 ניתוח נתונים":
         st.subheader("מכירות לפי קטגוריה")
         cat = df.groupby("קטגוריה")["מכירות_ש"].sum().sort_values()
         fig, ax = plt.subplots(figsize=(7, 4))
+        style_chart(fig, ax)
         ax.barh(heb_list(cat.index), cat.values, color=COLORS[:len(cat)])
         ax.set_xlabel(heb("מכירות (₪)"))
         ax.spines[["top", "right"]].set_visible(False)
@@ -235,8 +395,12 @@ elif page == "📊 ניתוח נתונים":
         st.subheader("חלוקת מכירות לפי אזור")
         region = df.groupby("אזור")["מכירות_ש"].sum()
         fig, ax = plt.subplots(figsize=(7, 4))
-        ax.pie(region.values, labels=heb_list(region.index), autopct="%1.1f%%",
-               colors=COLORS[:len(region)], startangle=90)
+        style_chart(fig, ax)
+        wedges, texts, autotexts = ax.pie(
+            region.values, labels=heb_list(region.index), autopct="%1.1f%%",
+            colors=COLORS[:len(region)], startangle=90)
+        for t in texts + autotexts:
+            t.set_color("#e2e8f0")
         ax.set_ylabel("")
         st.pyplot(fig); plt.close()
 
@@ -245,10 +409,11 @@ elif page == "📊 ניתוח נתונים":
 
     with r2c1:
         st.subheader("מכירות לפי יום בשבוע")
-        day_order   = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
-        day         = df.groupby("יום_בשבוע")["מכירות_ש"].sum().reindex(day_order, fill_value=0)
-        colors_day  = ["#E91E63" if d == "שבת" else "#4CAF50" for d in day_order]
+        day_order  = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"]
+        day        = df.groupby("יום_בשבוע")["מכירות_ש"].sum().reindex(day_order, fill_value=0)
+        colors_day = ["#ef4444" if d == "שבת" else "#6366f1" for d in day_order]
         fig, ax = plt.subplots(figsize=(7, 4))
+        style_chart(fig, ax)
         ax.bar(heb_list(day.index), day.values, color=colors_day)
         ax.set_ylabel(heb("מכירות (₪)"))
         plt.xticks(rotation=0, fontsize=9)
@@ -259,7 +424,8 @@ elif page == "📊 ניתוח נתונים":
         st.subheader("אחוז רווח לפי קטגוריה")
         prof = df.groupby("קטגוריה")["אחוז_רווח"].mean().sort_values()
         fig, ax = plt.subplots(figsize=(7, 4))
-        ax.barh(heb_list(prof.index), prof.values, color="#9C27B0")
+        style_chart(fig, ax)
+        ax.barh(heb_list(prof.index), prof.values, color="#8b5cf6")
         ax.set_xlabel(heb("אחוז רווח ממוצע (%)"))
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig); plt.close()
@@ -271,9 +437,10 @@ elif page == "📊 ניתוח נתונים":
         st.subheader("טרנד מכירות חודשי")
         monthly = df.groupby(df["תאריך"].dt.to_period("M"))["מכירות_ש"].sum()
         fig, ax = plt.subplots(figsize=(7, 4))
-        monthly.plot(ax=ax, color="#2196F3", linewidth=2, marker="o", markersize=3)
+        style_chart(fig, ax)
+        monthly.plot(ax=ax, color="#6366f1", linewidth=2, marker="o", markersize=3)
         ax.set_ylabel(heb("מכירות (₪)"))
-        ax.grid(True, alpha=0.3)
+        ax.grid(True, color="#2d2d4e", alpha=0.5)
         plt.xticks(rotation=45, fontsize=7)
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig); plt.close()
@@ -282,8 +449,9 @@ elif page == "📊 ניתוח נתונים":
         st.subheader("מכירות לפי עונה")
         season = df.groupby("עונה")["מכירות_ש"].sum().sort_values()
         fig, ax = plt.subplots(figsize=(7, 4))
+        style_chart(fig, ax)
         ax.bar(heb_list(season.index), season.values,
-               color=["#FF9800", "#2196F3", "#4CAF50", "#E91E63"][:len(season)])
+               color=["#f59e0b", "#6366f1", "#10b981", "#ef4444"][:len(season)])
         ax.set_ylabel(heb("מכירות (₪)"))
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig); plt.close()
@@ -357,12 +525,15 @@ elif page == "🤖 מודל ML":
                    meta["logistic_regression"]["auc"]]
         x = np.arange(len(metrics_labels))
         fig, ax = plt.subplots(figsize=(7, 4))
-        ax.bar(x - 0.2, rf_vals, 0.4, label="Random Forest",       color="#2196F3")
-        ax.bar(x + 0.2, lr_vals, 0.4, label="Logistic Regression", color="#FF9800")
+        style_chart(fig, ax)
+        ax.bar(x - 0.2, rf_vals, 0.4, label="Random Forest",       color="#6366f1")
+        ax.bar(x + 0.2, lr_vals, 0.4, label="Logistic Regression", color="#06b6d4")
         ax.set_xticks(x)
-        ax.set_xticklabels(metrics_labels)
+        ax.set_xticklabels(metrics_labels, color="#e2e8f0")
         ax.set_ylim(0, 1.1)
-        ax.legend()
+        legend = ax.legend(facecolor="#1a1a2e", edgecolor="#2d2d4e")
+        for text in legend.get_texts():
+            text.set_color("#e2e8f0")
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig); plt.close()
 
@@ -373,7 +544,8 @@ elif page == "🤖 מודל ML":
             fi_df = pd.DataFrame(list(fi.items()),
                                  columns=["Feature", "Importance"]).sort_values("Importance")
             fig, ax = plt.subplots(figsize=(7, 4))
-            ax.barh(fi_df["Feature"], fi_df["Importance"], color="#4CAF50")
+            style_chart(fig, ax)
+            ax.barh(fi_df["Feature"], fi_df["Importance"], color="#10b981")
             ax.set_xlabel("Importance")
             ax.spines[["top", "right"]].set_visible(False)
             st.pyplot(fig); plt.close()
@@ -456,10 +628,14 @@ elif page == "🔮 ניבוי":
 
         with rc2:
             fig, ax = plt.subplots(figsize=(3, 3))
-            ax.pie([high_prob, 1 - high_prob],
-                   labels=[heb("רווח גבוה"), heb("רווח נמוך")],
-                   colors=["#4CAF50", "#E91E63"],
-                   autopct="%1.1f%%", startangle=90)
+            style_chart(fig, ax)
+            wedges, texts, autotexts = ax.pie(
+                [high_prob, 1 - high_prob],
+                labels=[heb("רווח גבוה"), heb("רווח נמוך")],
+                colors=["#10b981", "#ef4444"],
+                autopct="%1.1f%%", startangle=90)
+            for t in texts + autotexts:
+                t.set_color("#e2e8f0")
             st.pyplot(fig); plt.close()
 
 
@@ -628,16 +804,19 @@ elif page == "📋 מוניטורינג":
         pc3.metric("🌲 RF AUC",      f"{rf['auc']:.4f}")
 
         fig, ax = plt.subplots(figsize=(8, 3))
+        style_chart(fig, ax)
         metrics_vals = [rf["accuracy"], rf["f1"], rf["auc"]]
         metrics_labels = ["Accuracy", "F1 Score", "AUC"]
         bars = ax.bar(metrics_labels, metrics_vals,
-                      color=["#2196F3", "#4CAF50", "#FF9800"], width=0.4)
+                      color=["#6366f1", "#10b981", "#f59e0b"], width=0.4)
         ax.set_ylim(0, 1.1)
         for bar, val in zip(bars, metrics_vals):
             ax.text(bar.get_x() + bar.get_width() / 2, bar.get_height() + 0.02,
-                    f"{val:.3f}", ha="center", fontsize=11, fontweight="bold")
-        ax.axhline(0.7, color="red", linestyle="--", alpha=0.5, label="סף מינימלי (70%)")
-        ax.legend(fontsize=9)
+                    f"{val:.3f}", ha="center", fontsize=11, fontweight="bold", color="#e2e8f0")
+        ax.axhline(0.7, color="#ef4444", linestyle="--", alpha=0.6, label="סף מינימלי (70%)")
+        legend = ax.legend(fontsize=9, facecolor="#1a1a2e", edgecolor="#2d2d4e")
+        for text in legend.get_texts():
+            text.set_color("#e2e8f0")
         ax.spines[["top", "right"]].set_visible(False)
         st.pyplot(fig)
         plt.close()
